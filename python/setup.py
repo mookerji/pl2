@@ -10,8 +10,10 @@ setup(name = 'rtree',
       url = 'https://github.com/mookerji/pl2',
       packages = ['rtree', 
                   'rtree.rtree', 
+                  'rtree.types', 
                   'rtree.tests.test_bench',
-                  'rtree.tests.test_rtree'],
+                  'rtree.tests.test_rtree',
+                  'rtree.tests.test_types'],
       classifiers = ["Development Status :: 2 - Pre-Alpha",
                      "Environment :: Console"]
 )
