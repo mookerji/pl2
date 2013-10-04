@@ -52,10 +52,18 @@ class RectangleTests(unittest.TestCase):
         r = Rectangle((0, 0), (10, 10))
         s = Rectangle((10, 10), (15, 15))
         t = Rectangle((0, 0), (15, 15))
-        self.assertTrue(r.get_minimum_bounding_rect(s) == t)
+        self.assertTrue(r.get_mbr(s) == t)
+
+
+class PageTests(unittest.TestCase):
+    pass
 
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(RectangleTests)
+    unittest.TextTestRunner(verbosity = 2).run(suite)
+    unittest.main()
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(PageTests)
     unittest.TextTestRunner(verbosity = 2).run(suite)
     unittest.main()

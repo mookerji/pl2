@@ -11,9 +11,11 @@ setup(name = 'rtree',
       packages = ['rtree', 
                   'rtree.rtree', 
                   'rtree.types', 
+                  'rtree.utils', 
                   'rtree.tests.test_bench',
                   'rtree.tests.test_rtree',
-                  'rtree.tests.test_types'],
+                  'rtree.tests.test_types',
+                  'rtree.tests.test_utils'],
       classifiers = ["Development Status :: 2 - Pre-Alpha",
                      "Environment :: Console"]
 )

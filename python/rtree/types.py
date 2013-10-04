@@ -1,27 +1,7 @@
 import math
 
-class Statistics(dict):
-    """ Keeps track of R-Tree operation statistics and functions calls.
-    """
-    def __init__(self, *args, **kwargs):
-        super(Statistics, self).__init__(*args, **kwargs)        
-        self['overflow'] = kwargs.get("overflow", 0)
-        self['split'] = kwargs.get("split", 0)
-        self['condense'] = kwargs.get("condense", 0)
-        self['leaf_nodes'] = kwargs.get("leaf_nodes", 0)
-        self['internal_nodes'] = kwargs.get("internal_nodes", 0)
-        self['tree_height'] = kwargs.get("tree_height", 0)
-
-
-class Properties(dict):
-    """ Configures the RTree.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        super(Properties, self).__init__(*args, **kwargs)
-        self['max_capacity'] = kwargs.get("max_capacity", 0)
-        self['min_capacity'] = kwargs.get("min_capacity", 0)
-        self['k_means_size'] = kwargs.get("k_means_size", 0)
+# TODO: This produces a weird circular dependency
+# from rtree.utils import hilbert_encode
 
 
 class Rectangle(object):
@@ -30,6 +10,8 @@ class Rectangle(object):
     """
 
     __slots__ = {'left', 'right', 'bottom', 'top'}
+
+    __hilbert_res = 32
 
     def __init__(self, p1, p2):
         x1, y1 = p1
@@ -47,14 +29,15 @@ class Rectangle(object):
     def merge_by_mbr(cls, rects):
         merged = Rectangle.get_empty()
         for rect in rects:
-            merged = merged.get_minimum_bounding_rect(rect)
+            merged = merged.get_mbr(rect)
         return merged
 
     @property
     def hilbert_value(self):
         """ Returns the Hilbert value of the rectangle centroid.
         """
-        assert False
+        x, y = self.centroid
+        return hilbert_encode((int(x), int(y)), Rectangle.__hilbert_res)
 
     @property 
     def centroid(self):
@@ -103,7 +86,7 @@ class Rectangle(object):
     def intersects_rect(self, rect):
         return self.right > rect.left and self.left < rect.right and self.top > rect.bottom and self.bottom < rect.top
     
-    def get_minimum_bounding_rect(self, rect):
+    def get_mbr(self, rect):
         """ Returns the minimum bounding rectangle with another rectangle.
         """
         left = min(self.left, rect.left)
@@ -112,11 +95,11 @@ class Rectangle(object):
         top = max(self.top, rect.top)
         return Rectangle((left, bottom), (right, top))
 
-    def get_minimum_bounding_rect_point(self, point):
+    def get_mbr_point(self, point):
         """ Returns the minimum bounding rectangle with a point
         """
         rect = Rectangle(point, point)
-        return self.get_minimum_bounding_rect(rect)
+        return self.get_mbr(rect)
     
     def get_expanded(self, n):
         assert False
@@ -134,12 +117,37 @@ class Rectangle(object):
         return "%s<%r>" % (self.__class__.__name__, self.coordinates)
 
 
-class Page(object):
+def hilbert_encode((x, y), r):
+    """Gives a Hilbert fractal encoding of a grid point (x, y) in a grid of
+    resolution r (yielding a square grid of length 2**r).
     """
+    mask = (1 << r) - 1
+    hodd = 0
+    heven = x ^ y
+    notx = ~x & mask
+    noty = ~y & mask
+    temp = notx ^ y
+    v0 = 0
+    v1 = 0
+    for k in xrange(1, r):
+        v1 = ((v1 & heven) | ((v0 ^ noty) & temp)) >> 1
+        v0 = ((v0 & (v1 ^ notx)) | (~v0 & (v1 ^ noty))) >> 1
+    hodd = (~v0 & (v1 ^ x)) | (v0 & (v1 ^ noty))
+    return interleave_bits(hodd, heven)
+
+
+def interleave_bits(odd, even):
+    """ Returns bit string from interleaving odd and even bit strings.
     """
-
-    def __init__(self):
-        pass
-
-    def __repr__(self):
-        pass
+    val = 0
+    max0 = max(odd, even)
+    n = 0
+    while (max0 > 0):
+        n += 1
+        max0 >>= 1
+    for i in xrange(n):
+        bitMask = 1 << i
+        a = (1 << (2*i)) if (even & bitMask) > 0  else 0
+        b = (1 << (2*i+1)) if (odd & bitMask) > 0 else 0
+        val += a + b
+    return val
