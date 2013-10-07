@@ -1,6 +1,10 @@
 # Useful utilities.
 # See http://stackoverflow.com/questions/106237/calculate-the-hilbert-value-of-a-point-for-use-in-a-hilbert-r-tree
 
+# TODO: Fix circular dependency 
+# TODO: Add some caching and memoization.
+# TODO: Switch to Hacker's Delight version.
+
 def hilbert_encode((x, y), r):
     """Gives a Hilbert fractal encoding of a grid point (x, y) in a grid of
     resolution r (yielding a square grid of length 2**r).

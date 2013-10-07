@@ -1,6 +1,7 @@
 import bisect
 import itertools
 
+# TODO: make sure fixed property fields aren't being recalculated all the time.
 
 class Statistics(dict):
     """ Keeps track of R-Tree operation statistics and functions calls.
@@ -58,11 +59,14 @@ class LeafEntry(object):
         self.obj = obj
         self.mhv = mbr.hilbert_value
 
+    def get_dotstring_repr(self):
+        assert False
+
     # def __repr__(self):
     #     ans = (self.__class__.__name__, self.mbr, self.obj_id, self.obj)
     #     return "%s<%r, %d, %r>" % ans
 
-
+                                       
 class RTreeNode(object):
     """ 
     A page is collection of entries. A page can either be for an inner node, in
@@ -115,6 +119,16 @@ class RTreeNode(object):
     def cohort_entries(self):
         entries = [entry.child.page_entries for entry in self.parent.page_entries]
         return list(itertools.chain.from_iterable(entries))
+
+    def next_entry_by_mhv(self, h):
+        """ Returns next page entry with the minimum Hilbert value greater than h.
+        """ 
+        return bisect.bisect_left(self.mhv_values, h)
+
+    def insert_entry(self, entry):
+        """ Inserts into page_entries an entry keyed by its Hilbert value.
+        """
+        assert False
 
     def iter(self, pred):
         """ Walks all the pages and page entries in a DFS fashion.
@@ -241,12 +255,7 @@ class RTreeNode(object):
         else:
             next_entry = self.next_entry_by_mhv(leaf_entry.mhv)
             child = self.page_entries[next_entry].child
-            return child.choose_leaf(leaf_entry)
-
-    def next_entry_by_mhv(self, h):
-        """ Returns next page entry with the minimum Hilbert value greater than h.
-        """ 
-        return bisect.bisect_left(self.mhv_values, h)
+            return child.choose_leaf(leaf_entry)    
 
     def delete(self, leaf_entry):
         """ Deletes the leaf_entry.
@@ -258,6 +267,10 @@ class RTreeNode(object):
             entry = leaf.entries[i]
             if entry.mbr == leaf_entry.mbr:
                 leaf.entries.pop(i)
+        # for underflow:
+        # redistribute entries from sibling nodes as in handle_overflow
+        # self.adjust_tree()
+
         #         leaf.condense_tree()
         #         break
         # if self.num_children == 1:
